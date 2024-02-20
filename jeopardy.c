@@ -13,79 +13,71 @@
 #include "players.h"
 #include "jeopardy.h"
 
-// Put macros or constants here using #define
 #define BUFFER_LEN 256
 #define NUM_PLAYERS 4
 
-// Put global environment variables here
+void clear_input_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) { }
+}
 
-// Processes the answer from the user containing what is or who is and tokenizes it to retrieve the answer.
-void tokenize(char *input, char **tokens);
-
-// Displays the game results for each player, their name and final score, ranked from first to last place
-void show_results(player *players, int num_players);
-
-
-int main(int argc, char *argv[])
-{
-    char chr;
-    int value;
-    int i;
-    char *category;
-
-    category =(char *)malloc(sizeof(char));
-
-    if (category == NULL) {
-        printf("Category not available!\n");
-        return -1;
-    }
-    // An array of 4 players, may need to be a pointer if you want it set dynamically
+int main(int argc, char *argv[]) {
     player players[NUM_PLAYERS];
-    
-    // Input buffer and and commands
-    char buffer[BUFFER_LEN] = { 0 };
+    char category[MAX_LEN];
+    int value;
+
+    // Prompt for players names and initialize scores
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        printf("Enter the name of player %d: ", i + 1);
+        scanf("%s", players[i].name);
+        players[i].score = 0;
+    }
 
     // Display the game introduction and initialize the questions
     initialize_game();
 
-    // Prompt for players names
-    printf("Enter the name of player1: ");
-    scanf(" %c", &chr);
-
-    printf("Enter the name of player2: ");
-    scanf(" %c", &chr);
-
-    printf("Enter the name of player3: ");
-    scanf(" %c", &chr);
-
-    printf("Enter the name of player4: ");
-    scanf(" %c", &chr);
-
-    
-    // initialize each of the players in the array
-
-    for(i=0; i<4; i++) {
+    // Game loop
+    while (true) {
         display_categories();
-        printf("Player, I hope you're excited for your question! Pick your category > %s %d", category, value);
-        scanf(" %d %c" , &value , category);
-        initialize_game();
-    
-        display_question(category , value);
 
-        free(category); 
+        // Player loop
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            printf("Player %s, pick your category and dollar value (e.g., 'Programming 100'): ", players[i].name);
+            scanf("%s %d", category, &value);
+            getchar();
 
-    }   
- 
-    // Perform an infinite loop getting command input from users until game ends
-    while (fgets(buffer, BUFFER_LEN, stdin) != NULL)
-    {   
-        display_categories();
-        // Call functions from the questions and players source files
+            // Display the question for the selected category and dollar value
+            display_question(category, value);
 
-        // Execute the game until all questions are answered
+            // Accept player answer
+            printf("Player %s, enter your answer: ", players[i].name);
+            char buffer[BUFFER_LEN];
+            fgets(buffer, BUFFER_LEN, stdin);
+            // Validate player answer
+            if (valid_answer(category, value, buffer)) {
+                printf("Correct answer! Player %s earns $%d.\n", players[i].name, value);
+                // Update player score
+                update_score(players, NUM_PLAYERS, players[i].name, value);
+            } else {
+                printf("Incorrect answer! Player %s loses $%d.\n", players[i].name, value);
+                // Deduct points if the answer is incorrect (optional)
+            }
 
-        // Display the final results and exit
+            clear_input_buffer();
+        }
+
+        // Check for game end condition (all questions answered)
+        if (all_questions_answered()) {
+
+            break; // Exit the game loop
+        }
     }
-    
-    return EXIT_SUCCESS;
+
+    // Display final results
+    printf("Game over! Final scores:\n");
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        printf("Player %s: $%d\n", players[i].name, players[i].score);
+    }
+
+    return 0;
 }
