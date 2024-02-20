@@ -38,7 +38,7 @@ void display_categories(void)
 {
     for (int i=0; i<NUM_QUESTIONS; i++) {
         if (!questions[i].answered){
-            printf( "%s - %d\n", questions[i].category, questions[i].value);
+            printf( "Remaining Categories and Dollar Values: %s - %d\n", questions[i].category, questions[i].value);
         }
     }
 
